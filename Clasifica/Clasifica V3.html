@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clasificación Lógica - Sistema Completo</title>
+    <style>
+        :root { --azul: #1a73e8; --rojo: #d93025; --verde: #1e8e3e; --gris: #f1f3f4; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #fafafa; color: #3c4043; }
+        .container { max-width: 1000px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); text-align: center; }
+        
+        /* Fuegos Artificiales */
+        #fireworks { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            pointer-events: none; display: none; z-index: 9999; 
+            background: rgba(0,0,0,0.9) url('https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJtZ3R6bm94bm94bm94bm94bm94bm94bm94bm94bm94bm94bm94JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/26tOZ42Mg6pbTUPHW/giphy.gif') center center no-repeat;
+            background-size: contain;
+        }
+
+        #pantalla-ejercicio, #pantalla-resultados { display: none; }
+        .setup-section { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; text-align: left; }
+        .full-width { grid-column: 1 / -1; }
+        
+        /* Drag & Drop */
+        .zona-palabras { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 25px; background: #f8f9fa; border: 2px dashed #dadce0; border-radius: 8px; min-height: 100px; margin-bottom: 20px; }
+        .palabra { padding: 10px 18px; background: white; border: 1px solid #ddd; border-radius: 25px; cursor: grab; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.05); user-select: none; }
+        .palabra:active { cursor: grabbing; }
+
+        .rejilla-categorias { display: grid; gap: 15px; margin-top: 10px; }
+        .categoria { min-height: 160px; background: #e8f0fe; border: 2px solid var(--azul); border-radius: 8px; padding: 12px; }
+        .categoria h3 { margin: 0 0 10px 0; color: var(--azul); font-size: 1.1rem; border-bottom: 1px solid rgba(26,115,232,0.2); padding-bottom: 5px; }
+        .zona-drop { min-height: 110px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px; }
+
+        /* Botones */
+        button { padding: 12px; border-radius: 4px; border: none; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        .btn-main { background: var(--azul); color: white; }
+        .btn-sec { background: var(--gris); color: #3c4043; }
+        .btn-danger { background: #feeae6; color: var(--rojo); font-size: 0.75rem; padding: 6px 12px; border: 1px solid #fad2cf; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9rem; }
+        th, td { border: 1px solid #dadce0; padding: 10px 5px; text-align: center; }
+        th { background: #f8f9fa; }
+        .btn-del { color: var(--rojo); cursor: pointer; font-size: 1.1rem; }
+
+        /* Revisión */
+        .lista-revision { text-align: left; max-width: 650px; margin: 20px auto; padding: 15px; background: #fff; border: 1px solid #ddd; border-radius: 8px; }
+        .res-bien { color: var(--verde); font-weight: bold; }
+        .res-mal { color: var(--rojo); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="fireworks"></div>
+
+<div class="container" id="menu-principal">
+    <h2 style="color: var(--azul);">Clasificación Lógica</h2>
+    <div class="setup-section">
+        <label>Usuario:</label>
+        <select id="sel-usuario">
+            <option value="Miguel">Miguel</option>
+            <option value="Invitado">Invitado</option>
+        </select>
+        
+        <label>Batería:</label><select id="sel-bateria"></select>
+        <label>Nº Palabras:</label><select id="sel-num-preguntas"></select>
+        <label>Tiempo (seg/palabra):</label><select id="sel-tiempo"></select>
+        
+        <button class="btn-main full-width" onclick="comenzar()">COMENZAR EJERCICIO</button>
+        <button class="btn-sec" onclick="verHistorial()">HISTORIAL</button>
+        <button class="btn-sec" onclick="verTrofeos()">TROFEOS</button>
+        
+        <div class="full-width" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px;">
+            <button class="btn-danger" onclick="borrarTodo()">BORRAR TODO EL HISTORIAL</button>
+        </div>
+    </div>
+</div>
+
+<div class="container" id="pantalla-ejercicio">
+    <div id="reloj" style="font-size: 1.8rem; font-weight: bold; color: var(--rojo); margin-bottom: 10px;">00:00</div>
+    <div class="zona-palabras" id="bolsa-palabras" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+    <div class="rejilla-categorias" id="contenedor-categorias"></div>
+    <button class="btn-main full-width" style="margin-top: 25px;" onclick="corregir()">FINALIZAR Y CORREGIR</button>
+</div>
+
+<div class="container" id="pantalla-resultados">
+    <div id="feedback"></div>
+    <button class="btn-main full-width" onclick="location.reload()">VOLVER AL INICIO</button>
+</div>
+
+<script src="bateria1.js"></script>
+<script src="bateria2.js"></script>
+<script src="bateria3.js"></script>
+<script src="bateria4.js"></script>
+<script src="bateria5.js"></script>
+<script src="bateria6.js"></script>
+<script src="bateria7.js"></script>
+<script src="bateria8.js"></script>
+<script src="bateria9.js"></script>
+<script src="bateria10.js"></script>
+
+<script>
+    const NOMBRES_BATERIAS = {
+        "bateria1": "Adverbios",
+        "bateria2": "Clasificación morfológica",
+        "bateria3": "Inglés: uso de Do, Go y Play",
+        "bateria4": "Transportes"
+    };
+
+    let palabrasElegidas = [];
+    let tiempoRestante = 0;
+    let timer;
+    const CLAVE_MAESTRA = "Covadonga";
+
+    window.onload = () => {
+        const selB = document.getElementById('sel-bateria');
+        for(let i=1; i<=10; i++) {
+            const id = `bateria${i}`;
+            if(window[id]) {
+                selB.innerHTML += `<option value="${id}">${NOMBRES_BATERIAS[id] || window[id].titulo || `Batería ${i}`}</option>`;
+            }
+        }
+        const selN = document.getElementById('sel-num-preguntas');
+        for(let i=16; i<=48; i+=4) selN.innerHTML += `<option value="${i}">${i} palabras</option>`;
+        const selT = document.getElementById('sel-tiempo');
+        for(let i=10; i<=35; i+=5) selT.innerHTML += `<option value="${i}">${i} seg</option>`;
+    };
+
+    function comenzar() {
+        const bID = document.getElementById('sel-bateria').value;
+        const config = window[bID];
+        if(!config) return alert("Batería no encontrada");
+
+        const numReq = parseInt(document.getElementById('sel-num-preguntas').value);
+        const tPorPal = parseInt(document.getElementById('sel-tiempo').value);
+        
+        let pool = [...config.palabras].sort(() => Math.random() - 0.5);
+        palabrasElegidas = pool.slice(0, numReq);
+        
+        const idsPresentes = [...new Set(palabrasElegidas.map(p => p.cat))];
+        const categoriasAMostrar = config.categorias
+            .map((nombre, index) => ({ nombre, index }))
+            .filter(item => idsPresentes.includes(item.index));
+
+        tiempoRestante = palabrasElegidas.length * tPorPal;
+
+        document.getElementById('menu-principal').style.display = 'none';
+        document.getElementById('pantalla-ejercicio').style.display = 'block';
+
+        generarTablero(categoriasAMostrar);
+        iniciarReloj();
+    }
+
+    function generarTablero(catsInfo) {
+        const contenedor = document.getElementById('contenedor-categorias');
+        const numCats = catsInfo.length;
+        const columnas = (numCats <= 2) ? numCats : (numCats <= 4 ? 2 : 3);
+        
+        contenedor.style.gridTemplateColumns = `repeat(${columnas}, 1fr)`;
+        contenedor.innerHTML = '';
+        
+        catsInfo.forEach(cat => {
+            contenedor.innerHTML += `
+                <div class="categoria">
+                    <h3>${cat.nombre}</h3>
+                    <div class="zona-drop" id="cat-${cat.index}" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                </div>`;
+        });
+
+        const bolsa = document.getElementById('bolsa-palabras');
+        bolsa.innerHTML = '';
+        [...palabrasElegidas].sort(() => Math.random() - 0.5).forEach((p, i) => {
+            bolsa.innerHTML += `<div class="palabra" draggable="true" ondragstart="drag(event)" id="p-${i}" data-cat="${p.cat}">${p.texto}</div>`;
+        });
+    }
+
+    function allowDrop(ev) { ev.preventDefault(); }
+    function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); }
+    function drop(ev) {
+        ev.preventDefault();
+        const data = ev.dataTransfer.getData("text");
+        const target = ev.target.closest('.zona-drop') || ev.target.closest('.zona-palabras');
+        if (target) target.appendChild(document.getElementById(data));
+    }
+
+    function iniciarReloj() {
+        const display = document.getElementById('reloj');
+        timer = setInterval(() => {
+            tiempoRestante--;
+            const m = Math.floor(Math.max(0, tiempoRestante) / 60);
+            const s = Math.max(0, tiempoRestante) % 60;
+            display.textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            if(tiempoRestante <= 0) { clearInterval(timer); corregir(); }
+        }, 1000);
+    }
+
+    function corregir() {
+        clearInterval(timer);
+        let aciertos = 0;
+        let resumenRevision = [];
+        const numTotal = palabrasElegidas.length;
+        const bID = document.getElementById('sel-bateria').value;
+        const categoriasOrig = window[bID].categorias;
+        
+        // 1. Revisar categorías ocupadas
+        document.querySelectorAll('.zona-drop').forEach((zona) => {
+            const idCatDestino = parseInt(zona.id.split('-')[1]);
+            zona.querySelectorAll('.palabra').forEach(item => {
+                const catCorrectaIdx = parseInt(item.dataset.cat);
+                const texto = item.textContent;
+                
+                if(catCorrectaIdx === idCatDestino) {
+                    aciertos++;
+                    resumenRevision.push({ texto, correcta: true });
+                } else {
+                    resumenRevision.push({ texto, correcta: false, deberiaSer: categoriasOrig[catCorrectaIdx] });
+                }
+            });
+        });
+
+        // 2. Revisar palabras olvidadas en la bolsa
+        document.querySelectorAll('#bolsa-palabras .palabra').forEach(item => {
+            const catCorrectaIdx = parseInt(item.dataset.cat);
+            resumenRevision.push({ texto: item.textContent, correcta: false, deberiaSer: categoriasOrig[catCorrectaIdx], olvidada: true });
+        });
+
+        const errores = numTotal - aciertos;
+        const nota = ((aciertos / numTotal) * 10).toFixed(2).replace('.', ',');
+        const segEmpleados = (numTotal * parseInt(document.getElementById('sel-tiempo').value)) - tiempoRestante;
+
+        const resultado = {
+            usuario: document.getElementById('sel-usuario').value,
+            fecha: new Date().toLocaleString().replace(',', ''),
+            bateria: NOMBRES_BATERIAS[bID] || "Batería",
+            palabras: numTotal,
+            aciertos, errores, tiempo: segEmpleados, nota
+        };
+
+        let h = JSON.parse(localStorage.getItem('hist_drop') || '[]');
+        h.push(resultado);
+        localStorage.setItem('hist_drop', JSON.stringify(h));
+
+        if(aciertos === numTotal) {
+            let t = JSON.parse(localStorage.getItem('trofeos_drop') || '[]');
+            t.push(resultado);
+            localStorage.setItem('trofeos_drop', JSON.stringify(t));
+            document.getElementById('fireworks').style.display = 'block';
+            setTimeout(() => { document.getElementById('fireworks').style.display = 'none'; }, 5000);
+        }
+
+        mostrarResultados(resultado, resumenRevision);
+    }
+
+    function mostrarResultados(res, revision) {
+        document.getElementById('pantalla-ejercicio').style.display = 'none';
+        document.getElementById('pantalla-resultados').style.display = 'block';
+        
+        let htmlRev = `<div class="lista-revision"><h3>Revisión:</h3><ul style="list-style:none; padding:0;">`;
+        revision.forEach(item => {
+            if(item.correcta) {
+                htmlRev += `<li class="res-bien">✓ ${item.texto} (Correcto)</li>`;
+            } else {
+                htmlRev += `<li class="res-mal">✗ ${item.texto} - Debería ser: ${item.deberiaSer} ${item.olvidada?'(Sin clasificar)':''}</li>`;
+            }
+        });
+        htmlRev += `</ul></div>`;
+
+        document.getElementById('feedback').innerHTML = `
+            <h1 style="color:var(--azul)">Nota: ${res.nota}</h1>
+            <p>Aciertos: <b style="color:green">${res.aciertos}</b> | Errores: <b style="color:red">${res.errores}</b></p>
+            <p>Tiempo: ${res.tiempo} s</p>
+            ${htmlRev}
+        `;
+    }
+
+    function verHistorial() {
+        const u = document.getElementById('sel-usuario').value;
+        let h = JSON.parse(localStorage.getItem('hist_drop') || '[]').filter(x => x.usuario === u);
+        let table = `<h2>Historial: ${u}</h2><table><tr><th>Fecha</th><th>Batería</th><th>Pals</th><th>A</th><th>E</th><th>Seg</th><th>Nota</th><th>❌</th></tr>`;
+        h.reverse().forEach((x, idx) => {
+            table += `<tr><td>${x.fecha}</td><td>${x.bateria}</td><td>${x.palabras}</td><td>${x.aciertos}</td><td>${x.errores}</td><td>${x.tiempo}</td><td><b>${x.nota}</b></td><td class="btn-del" onclick="borrarLinea(${h.length-1-idx})">🗑️</td></tr>`;
+        });
+        document.body.innerHTML = `<div class="container">${table}</table><br><button class="btn-main" onclick="location.reload()">VOLVER</button></div>`;
+    }
+
+    function borrarLinea(idx) {
+        if(prompt("Clave:") === CLAVE_MAESTRA) {
+            let h = JSON.parse(localStorage.getItem('hist_drop') || '[]');
+            h.splice(idx, 1);
+            localStorage.setItem('hist_drop', JSON.stringify(h));
+            verHistorial();
+        }
+    }
+
+    function borrarTodo() {
+        if(prompt("Clave borrar TODO:") === CLAVE_MAESTRA) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
+
+    function verTrofeos() {
+        const u = document.getElementById('sel-usuario').value;
+        let t = JSON.parse(localStorage.getItem('trofeos_drop') || '[]').filter(x => x.usuario === u);
+        let html = `<h2>Trofeos de ${u} 🏆</h2><div style="display:flex; flex-wrap:wrap; gap:15px; justify-content:center;">`;
+        t.forEach(x => {
+            html += `<div style="border:2px solid gold; padding:20px; border-radius:12px; background:#fffdf0;">🥇<br><b>PLENO</b><br>${x.bateria}<br><small>${x.fecha}</small></div>`;
+        });
+        document.body.innerHTML = `<div class="container">${html||'<p>Sin trofeos.</p>'}</div><br><button class="btn-main" onclick="location.reload()">VOLVER</button></div>`;
+    }
+</script>
+</body>
+</html>
